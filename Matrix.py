@@ -35,7 +35,7 @@ for i in range(len(df)):
     for j in range(int(len(df) - len(R_obj))):
         R_obj.append(0)
     R[i] = R_obj
-print('Получившаяся матрица переходов '+'\n', R)
+# print('Получившаяся матрица переходов '+'\n', R)
 # Внутри цикла ищем ящики
 g = np.arange(0, len(R))
 for i in range(len(df)):
@@ -69,6 +69,7 @@ for z in box:
         final.sort()
 print('Ящики' + '\n', *final)
 print()
+LinResult = []
 for i in range(len(final)):
     final[i] = [h - 1 for h in final[i]]
     LinMatrix = df.iloc[final[i], final[i]]
@@ -78,8 +79,9 @@ for i in range(len(final)):
     m[len(m)-1] = [1 for _ in range(len(m))]
     V = np.zeros(len(m))
     V[len(m)-1] = 1
-    otvet = np.linalg.solve(m, V)
-    print(otvet)
+    answer = np.linalg.solve(m, V)
+    LinResult.append(answer)
+print(*LinResult)
 
 # Создание матрицы без проходных состояний
 df1 = copy.deepcopy(df)
@@ -89,3 +91,30 @@ df1 = pd.DataFrame(df1)
 # Изменить имя столбцов
 # Надо сделать проверки на значения в матрице
 # Проверка внутри ящика что сумма равна 1
+matrix_PI = np.zeros([len(df), len(df)])
+Matrix_PI = np.zeros([len(df), len(df)])
+right = np.zeros([len(ways), len(df)])
+left = np.zeros([len(ways), len(ways)])
+edin = np.zeros([len(ways), len(ways)])
+#Решение линейной системы и создание матрицы Пи
+for i in range(len(final)):
+    for j in final[i]:
+        r = 0
+        for k in final[i]:
+            matrix_PI[j, k] = LinResult[i][r]
+            r += 1
+table = np.asarray(df.values.tolist())
+k = 0
+for i in ways:
+    right[k] = np.matmul(table[i-1], matrix_PI)
+    k += 1
+for i in range(len(ways)):
+    for j in range(len(ways)):
+        left[i][j] = table[ways[i]-1][ways[j]-1]
+        edin[i][i] = 1
+left = edin - left
+print('Ответ')
+answer = np.linalg.solve(left, right)
+for i in range(len(ways)):
+    matrix_PI[ways[i]-1] = answer[i]
+print(np.around(matrix_PI, 2))
