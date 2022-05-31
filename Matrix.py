@@ -1,7 +1,51 @@
-import copy
 import pandas as pd
 import numpy as np
 import functools
+
+
+def linear_matrix(boxes):
+    linResult = []
+    for i in range(len(boxes)):
+        final[i] = [h - 1 for h in boxes[i]]
+        linMatrix = df.iloc[boxes[i], boxes[i]]
+        m = np.array(linMatrix.values.tolist()).transpose()
+        for j in range(len(m)):
+            m[j][j] = m[j][j] - 1
+        m[len(m) - 1] = [1 for _ in range(len(m))]
+        V = np.zeros(len(m))
+        V[len(m) - 1] = 1
+        answer = np.linalg.solve(m, V)
+        linResult.append(answer)
+    return linResult
+
+
+def pi_matrix(dataframe, gates, boxes, linear_result):
+    # Решение линейной системы и создание матрицы Пи
+    matrix_PI = np.zeros([len(dataframe), len(dataframe)])
+    right = np.zeros([len(gates), len(dataframe)])
+    left = np.zeros([len(gates), len(gates)])
+    edin = np.zeros([len(gates), len(gates)])
+    for i in range(len(boxes)):
+        for j in boxes[i]:
+            r = 0
+            for k in boxes[i]:
+                matrix_PI[j, k] = linear_result[i][r]
+                r += 1
+    table = np.asarray(dataframe.values.tolist())
+    k = 0
+    for i in gates:
+        right[k] = np.matmul(table[i - 1], matrix_PI)
+        k += 1
+    for i in range(len(gates)):
+        for j in range(len(gates)):
+            left[i][j] = table[gates[i] - 1][gates[j] - 1]
+            edin[i][i] = 1
+    left = edin - left
+    answer = np.linalg.solve(left, right)
+    for i in range(len(gates)):
+        matrix_PI[ways[i] - 1] = answer[i]
+    result = (np.around(matrix_PI, 2))
+    return result
 
 
 # Считываем данные из файла Excel
@@ -68,53 +112,10 @@ for z in box:
         final.append(z)
         final.sort()
 print('Ящики' + '\n', *final)
-print()
-LinResult = []
-for i in range(len(final)):
-    final[i] = [h - 1 for h in final[i]]
-    LinMatrix = df.iloc[final[i], final[i]]
-    m = np.array(LinMatrix.values.tolist()).transpose()
-    for j in range(len(m)):
-        m[j][j] = m[j][j] - 1
-    m[len(m)-1] = [1 for _ in range(len(m))]
-    V = np.zeros(len(m))
-    V[len(m)-1] = 1
-    answer = np.linalg.solve(m, V)
-    LinResult.append(answer)
+LinResult = linear_matrix(final)
 print(*LinResult)
-
-# Создание матрицы без проходных состояний
-df1 = copy.deepcopy(df)
-df1 = df1.drop(index=step, columns=step)
-df1 = df1.reset_index(drop=True)
-df1 = pd.DataFrame(df1)
-# Изменить имя столбцов
+Pi_matrix = pi_matrix(df, ways, final, LinResult)
+print(Pi_matrix)
 # Надо сделать проверки на значения в матрице
 # Проверка внутри ящика что сумма равна 1
-matrix_PI = np.zeros([len(df), len(df)])
-Matrix_PI = np.zeros([len(df), len(df)])
-right = np.zeros([len(ways), len(df)])
-left = np.zeros([len(ways), len(ways)])
-edin = np.zeros([len(ways), len(ways)])
-#Решение линейной системы и создание матрицы Пи
-for i in range(len(final)):
-    for j in final[i]:
-        r = 0
-        for k in final[i]:
-            matrix_PI[j, k] = LinResult[i][r]
-            r += 1
-table = np.asarray(df.values.tolist())
-k = 0
-for i in ways:
-    right[k] = np.matmul(table[i-1], matrix_PI)
-    k += 1
-for i in range(len(ways)):
-    for j in range(len(ways)):
-        left[i][j] = table[ways[i]-1][ways[j]-1]
-        edin[i][i] = 1
-left = edin - left
-print('Ответ')
-answer = np.linalg.solve(left, right)
-for i in range(len(ways)):
-    matrix_PI[ways[i]-1] = answer[i]
-print(np.around(matrix_PI, 2))
+
