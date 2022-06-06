@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import copy
 import pandas
@@ -26,7 +27,7 @@ def solver(c, a, method):
             print("Нижнее ограничение больше верхнего!")
             return
     if k == len(a[0]) or sum_a1 == 1 or sum_a2 == 1:
-        print("Ошибка ограничений, множество одноэлементное!")
+        print("Ошибка ограничений, множество состоит из одного элемента!")
         return
     k = 0
     for i in range(len(c) - 1):
@@ -72,7 +73,7 @@ def solver(c, a, method):
             r.append(z)
             # Обратная пирамидальная сортировка
             heap_sort(copy.deepcopy(r[1]), r)
-    # Производим округление результата, что бы избежать проблему цифрового нуля
+    # Производим округление результата, что бы избежать проблемы цифрового нуля
     x = np.around(r[4], 2)
     # Находим значение целевой функции
     f = (c * x).sum()
@@ -130,13 +131,13 @@ def prepare_data(raw_data):
 
 def universal_solver(input_data, method):
     # Объявляем имя столбцов содержащих решение задачи
-    X, F = 'Минимизируещее решение X', 'Значение  F'
+    X, F = 'Минимизирующее решение X' if method == 'min' else 'Максимизирующее решение Х', 'Значение  F'
     if '.csv' in input_data:
         # Читаем данные из файла и создаем объект DataFrame
         data = pandas.read_csv('in.csv', sep=';')
         # Используем функцию подготовки данных, для получения списков значений
         C, A1, A2 = prepare_data(data)
-        # Дополняем DataFrame стобцом со значениями х-сов полученных из функции solver
+        # Дополняем DataFrame столбцом со значениями х-сов полученных из функции solver
         data[X], data[F] = solver(C, [A1, A2], method)
         data[F][1:] = None
         # Записываем данные DataFrame в файл csv
@@ -147,7 +148,7 @@ def universal_solver(input_data, method):
         data = pandas.read_excel('Data.xlsx', engine='openpyxl')
         # Используем функцию подготовки данных, для получения списков значений
         C, A1, A2 = prepare_data(data)
-        # Дополняем DataFrame стобцом со значениями х-сов полученных из функции solver
+        # Дополняем DataFrame столбцом со значениями х-сов полученных из функции solver
         data[X], data[F] = solver(C, [A1, A2], method)
         data[F][1:] = None
         # Записываем данные DataFrame в исходный файл Excel
@@ -165,20 +166,25 @@ def universal_solver(input_data, method):
     return
 
 
+# Начало работы программы
 # Введем входные данные с помощью переменных
+print(os.getcwd())
 costs = [2, 4, 10, 8, 6]
 low_a = [0.1, 0.2, 0.1, 0.05, 0.05]
 high_a = [0.3, 0.4, 0.5, 0.1, 0.3]
 Data = [costs, [low_a, high_a]]
-# На вход данной функции можно передать или переменную Data или файлы csv и xlsx
-print("Приветствую! Задайте входные данные. Для этого запишите имя файла Excel или csv или напишите Data для использования демонстрационных данных")
+# На вход данной функции можно передать или переменную Data, или файлы csv и xlsx
+print("Приветствую! Задайте входные данные. Для этого запишите имя файла Excel или csv или напишите Data для "
+      "использования демонстрационных данных")
 file = input()
 print("Укажите метод записав min (Минимум) или max (Максимум)")
-method = input()
+algorithm = input()
 if file == "Data":
     print("C=", costs)
     print("a1=", low_a)
     print("a2=", high_a)
-    universal_solver(Data, method)
+    universal_solver(Data, algorithm)
 else:
-    universal_solver(file, method)
+    universal_solver(file, algorithm)
+print('Нажмите Enter, чтобы закрыть окно')
+input()
