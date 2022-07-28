@@ -168,23 +168,23 @@ def universal_solver(input_data, method):
 
 # Начало работы программы
 # Введем входные данные с помощью переменных
-print(os.getcwd())
-costs = [2, 4, 10, 8, 6]
-low_a = [0.1, 0.2, 0.1, 0.05, 0.05]
-high_a = [0.3, 0.4, 0.5, 0.1, 0.3]
-Data = [costs, [low_a, high_a]]
-# На вход данной функции можно передать или переменную Data, или файлы csv и xlsx
-print("Приветствую! Задайте входные данные. Для этого запишите имя файла Excel или csv или напишите Data для "
-      "использования демонстрационных данных")
-file = input()
-print("Укажите метод записав min (Минимум) или max (Максимум)")
-algorithm = input()
-if file == "Data":
-    print("C=", costs)
-    print("a1=", low_a)
-    print("a2=", high_a)
-    universal_solver(Data, algorithm)
-else:
-    universal_solver(file, algorithm)
-print('Нажмите Enter, чтобы закрыть окно')
-input()
+# print(os.getcwd())
+# costs = [2, 4, 10, 8, 6]
+# low_a = [0.1, 0.2, 0.1, 0.05, 0.05]
+# high_a = [0.3, 0.4, 0.5, 0.1, 0.3]
+# Data = [costs, [low_a, high_a]]
+# # На вход данной функции можно передать или переменную Data, или файлы csv и xlsx
+# # print("Приветствую! Задайте входные данные. Для этого запишите имя файла Excel или csv или напишите Data для "
+# #       "использования демонстрационных данных")
+# # file = input()
+# # print("Укажите метод записав min (Минимум) или max (Максимум)")
+# # algorithm = input()
+# if file == "Data":
+#     print("C=", costs)
+#     print("a1=", low_a)
+#     print("a2=", high_a)
+#     universal_solver(Data, algorithm)
+# else:
+#     universal_solver(file, algorithm)
+# print('Нажмите Enter, чтобы закрыть окно')
+# input()
