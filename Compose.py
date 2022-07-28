@@ -17,7 +17,7 @@ for i in range(len(rules)):
     splitdfp1 = dfp1.loc[(dfp1[0].apply(str).apply(lambda x: x.split('.')[0]) == str(i + 1)) & (
                 dfp1[0].apply(str).apply(lambda x: x.split('.')[1]) == str(rules[i]))]
     dfp1_spl = dfp1_spl.append(splitdfp1)
-dfp1_spl = dfp1_spl.reset_index().drop(columns=[0])
+dfp1_spl = dfp1_spl.reset_index().drop(columns=[0,'index'])
 p1 = dfp1_spl.to_numpy()
 
 dfp2_spl = pd.DataFrame()
@@ -25,14 +25,15 @@ for i in range(len(rules)):
     splitdfp2 = dfp2.loc[(dfp2[0].apply(str).apply(lambda x: x.split('.')[0]) == str(i + 1)) & (
                 dfp2[0].apply(str).apply(lambda x: x.split('.')[1]) == str(rules[i]))]
     dfp2_spl = dfp2_spl.append(splitdfp2)
-dfp2_spl = dfp2_spl.reset_index().drop(columns=[0])
+dfp2_spl = dfp2_spl.reset_index().drop(columns=[0, 'index'])
 p2 = dfp2_spl.to_numpy()
-
-c = dfc.to_numpy
+c = dfc.to_numpy()
 c = c.transpose()
+p = np.zeros([len(p1),len(p1)])
 for i in range(len(p1)):
-    a = [p1[i], p2[i]]
-    p_itog, F = Linear.solver(c, a)
-    p = p.append(p_itog)
+    a = (p1[i], p2[i])
+    p_itog, F = Linear.solver(c, a, 'max')
+    p[i] = p_itog
 q = np.dot(p,c)
-Ml.ergo_solver('PrimerAV.xlsx')
+print(q)
+# Ml.ergo_solver('PrimerAV.xlsx')
