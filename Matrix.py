@@ -50,9 +50,8 @@ def pi_matrix(dataframe, gates, boxes, linear_result):
     return result
 
 
-def find_boxes(file):
+def find_boxes(df):
     # Считываем данные из файла Excel
-    df = pd.read_excel(file, sheet_name='Лист1', header=None)
     # Инициализируем списки для переходов и ящиков
     step, box, bins = [], [], []
     # Создаем матрицу, заполненную нулями
@@ -118,7 +117,8 @@ def find_boxes(file):
 
 
 def ergo_solver(file):
-    dataframe, gates, boxes = find_boxes(file)
+    df = pd.read_excel(file, sheet_name='Лист1', header=None)
+    dataframe, gates, boxes = find_boxes(df)
     print('Проходные состояния:' + '\n', gates)
     print('Ящики:' + '\n', *boxes)
     LinResult = linear_matrix(dataframe, boxes)
@@ -126,8 +126,8 @@ def ergo_solver(file):
     print('Рассчитанная матрица Пи:' + '\n', Pi_matrix)
 
 
-# Начало работы программы
-print(os.getcwd())
-ergo_solver('PrimerAV.xlsx')
-print('Нажмите Enter, чтобы закрыть окно')
-input()
+# # Начало работы программы
+# print(os.getcwd())
+# ergo_solver('PrimerAV.xlsx')
+# print('Нажмите Enter, чтобы закрыть окно')
+# input()

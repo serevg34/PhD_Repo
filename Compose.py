@@ -1,7 +1,10 @@
+import copy
+
 import MathLibrary as Ml
 import Linear
 import pandas as pd
 import numpy as np
+import Matrix
 
 dfp1 = pd.read_excel('p1.xlsx', header=None)
 dfp2 = pd.read_excel('p2.xlsx', header=None)
@@ -36,4 +39,17 @@ for i in range(len(p1)):
     p[i] = p_itog
 q = np.dot(p,c)
 print(q)
+df = pd.DataFrame(p)
+# Найдем матрицу ПИ
+dataframe, gates, boxes = Matrix.find_boxes(df)
+print('Проходные состояния:' + '\n', gates)
+print('Ящики:' + '\n', *boxes)
+LinResult = Matrix.linear_matrix(dataframe, boxes)
+Pi_matrix = Matrix.pi_matrix(dataframe, gates, boxes, LinResult)
+print('Рассчитанная матрица Пи:' + '\n', Pi_matrix)
+
+# найдем r(P) формула в задаче 3.2
+r_P = copy.deepcopy(Pi_matrix)
+r_P = np.dot(Pi_matrix, q)
+print(r_P)
 # Ml.ergo_solver('PrimerAV.xlsx')
