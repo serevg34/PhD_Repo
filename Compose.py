@@ -45,6 +45,7 @@ dataframe, gates, boxes = Matrix.find_boxes(df)
 print('Проходные состояния:' + '\n', gates)
 print('Ящики:' + '\n', *boxes)
 LinResult = Matrix.linear_matrix(dataframe, boxes)
+print(LinResult)
 Pi_matrix = Matrix.pi_matrix(dataframe, gates, boxes, LinResult)
 print('Рассчитанная матрица Пи:' + '\n', Pi_matrix)
 
@@ -52,4 +53,13 @@ print('Рассчитанная матрица Пи:' + '\n', Pi_matrix)
 r_P = copy.deepcopy(Pi_matrix)
 r_P = np.dot(Pi_matrix, q)
 print(r_P)
-# Ml.ergo_solver('PrimerAV.xlsx')
+# Найдем W1
+print(np.eye(len(p))-p+Pi_matrix)
+B = np.linalg.inv(np.eye(len(p))-p+Pi_matrix)
+W1 = np.dot(B, q)-r_P
+print(W1)
+def Func_x(x, a, b):
+    return b + np.dot(a, x)
+
+F = Func_x(p,[r_P.transpose(), W1.transpose()],[r_P, q-r_P-W1])
+print('F=', F)
