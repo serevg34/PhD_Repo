@@ -208,13 +208,15 @@ def pi_matrix(dataframe, gates, boxes, linear_result):
     answer = np.linalg.solve(left, right)
     for i in range(len(gates)):
         matrix_PI[gates[i] - 1] = answer[i]
-    result = (np.around(matrix_PI, 2))
+    result = matrix_PI
+    #result = (np.around(matrix_PI, 2))
     return result
 
 
 def find_boxes(file):
     # Считываем данные из файла Excel
-    df = pd.read_excel(file, sheet_name='Лист1', header=None)
+#    df = pd.read_excel(file, sheet_name='Лист1', header=None)
+    df = file
     # Инициализируем списки для переходов и ящиков
     step, box, bins = [], [], []
     # Создаем матрицу, заполненную нулями
@@ -284,3 +286,173 @@ def ergo_solver(file):
     LinResult = linear_matrix(dataframe, boxes)
     Pi_matrix = pi_matrix(dataframe, gates, boxes, LinResult)
     print('Рассчитанная матрица Пи:' + '\n', Pi_matrix)
+
+
+
+
+
+
+def serch_max_control(H, h_sig):
+    # Формируем матрицу s (Начальный выбор параметров)
+    s = []
+    for i in range(len(H)):
+        s += [0]
+
+    next_step = 0
+    while next_step == 0:
+        # Записываем матрицу P и sig по выбранным s
+        P = np.zeros([len(s), len(s)])
+        sig = np.zeros([len(s), 1])
+        for i in range(len(s)):
+            P[i] = H[i][s[i]]
+            sig[i] = h_sig[i][s[i]]
+
+        df = pd.DataFrame(P)
+        # Найдем матрицу ПИ
+        dataframe, gates, boxes = find_boxes(df)
+        # print('Проходные состояния:' + '\n', gates)
+        # print('Ящики:' + '\n', *boxes)
+        LinResult = linear_matrix(dataframe, boxes)
+        # print(LinResult)
+        Pi_matrix = pi_matrix(dataframe, gates, boxes, LinResult)
+        r = np.dot(Pi_matrix, sig)
+        W1 = np.dot(np.linalg.inv(np.eye(len(s)) - P + Pi_matrix) - Pi_matrix, sig)
+        W2 = -np.dot(np.linalg.inv(np.eye(len(s)) - P + Pi_matrix), W1)
+
+        # Поиск x1
+        x1_s = copy.deepcopy(h_sig)
+        for i in range(len(s)):
+            for j in range(len(H[i])):
+                x1_s[i][j] = np.dot(H[i][j], r) - r[i]
+        # Поиск максимальных значений
+        x1 = copy.deepcopy(s)
+        for i in range(len(s)):
+            x1[i] = max(x1_s[i])
+
+        # На какие индексы состояний меняем по x1 множество J1
+        index_J1 = copy.deepcopy(s)
+        for i in range(len(x1)):
+            if x1[i] > 10 ** (-10):
+                for j in range(len(h_sig[i])):
+                    if x1_s[i][j] == x1[i]:
+                        index_J1[i] = j
+
+        # Поиск x2
+        x2_s = copy.deepcopy(h_sig)
+        for i in range(len(s)):
+            for j in range(len(H[i])):
+                x2_s[i][j] = h_sig[i][j] + np.dot(H[i][j], W1) - W1[i] - r[i]
+
+        # Поиск максимальных значений
+        x2 = copy.deepcopy(s)
+        for i in range(len(s)):
+            x2[i] = max(x2_s[i])
+
+        # На какие индексы состояний меняем по x2 множество J2
+        index_J2 = copy.deepcopy(s)
+        for i in range(len(x2)):
+            if x2[i] > 10 ** (-10):
+                for j in range(len(h_sig[i])):
+                    if x2_s[i][j] == x2[i]:
+                        index_J2[i] = j
+
+        # Формируем множество J1 + J2
+        sum_J = copy.deepcopy(s)
+        for i in range(len(s)):
+            if s[i] != index_J1[i]:
+                sum_J[i] = index_J1[i]
+            if s[i] != index_J2[i]:
+                sum_J[i] = index_J2[i]
+
+        # Проверка перехода на слледующий шаг
+        if s == sum_J:
+            next_step = 1
+        if s != sum_J:
+            for i in range(len(s)):
+                if s[i] != sum_J[i]:
+                    s[i] = sum_J[i]
+
+    # Выделение разрешенных состояний
+    sost_right = copy.deepcopy(h_sig)
+    for i in range(len(s)):
+        for j in range(len(H[i])):
+            sost_right[i][j] = 0
+            if (x1_s[i][j] >= -10 ** (-10)) and (x2_s[i][j] >= -10 ** (-10)):
+                sost_right[i][j] = 1
+
+    finish_step = 0
+    while finish_step == 0:
+        P = np.zeros([len(s), len(s)])
+        sig = np.zeros([len(s), 1])
+        for i in range(len(s)):
+            P[i] = H[i][s[i]]
+            sig[i] = h_sig[i][s[i]]
+
+        df = pd.DataFrame(P)
+        # Найдем матрицу ПИ
+        dataframe, gates, boxes = find_boxes(df)
+        # print('Проходные состояния:' + '\n', gates)
+        # print('Ящики:' + '\n', *boxes)
+        LinResult = linear_matrix(dataframe, boxes)
+        # print(LinResult)
+        Pi_matrix = pi_matrix(dataframe, gates, boxes, LinResult)
+        r = np.dot(Pi_matrix, sig)
+        W1 = np.dot(np.linalg.inv(np.eye(len(s)) - P + Pi_matrix) - Pi_matrix, sig)
+        W2 = -np.dot(np.linalg.inv(np.eye(len(s)) - P + Pi_matrix), W1)
+
+        # Поиск x2
+        x2_s = copy.deepcopy(h_sig)
+        for i in range(len(s)):
+            for j in range(len(H[i])):
+                x2_s[i][j] = -1
+                if sost_right[i][j] == 1:
+                    x2_s[i][j] = h_sig[i][j] + np.dot(H[i][j], W1) - W1[i] - r[i]
+
+        # Поиск максимальных значений
+        x2 = copy.deepcopy(s)
+        for i in range(len(s)):
+            x2[i] = max(x2_s[i])
+
+        # На какие индексы состояний меняем по x2 множество J3
+        index_J3 = copy.deepcopy(s)
+        for i in range(len(x2)):
+            if x2[i] > 10 ** (-10):
+                for j in range(len(h_sig[i])):
+                    if x2_s[i][j] == x2[i]:
+                        index_J3[i] = j
+
+        # Поиск x3
+        x3_s = copy.deepcopy(h_sig)
+        for i in range(len(s)):
+            for j in range(len(H[i])):
+                x3_s[i][j] = -1
+                if sost_right[i][j] == 1:
+                    x3_s[i][j] = np.dot(H[i][j], W2) - W2[i] - W1[i]
+
+        # Поиск максимальных значений
+        x3 = copy.deepcopy(s)
+        for i in range(len(s)):
+            x3[i] = max(x3_s[i])
+
+        # На какие индексы состояний меняем по x3 множество J4
+        index_J4 = copy.deepcopy(s)
+        for i in range(len(x2)):
+            if x3[i] > 10 ** (-10):
+                for j in range(len(h_sig[i])):
+                    if x3_s[i][j] == x3[i]:
+                        index_J4[i] = j
+
+        # Проверка перехода к выводу данных
+        sum_J = copy.deepcopy(s)
+        for i in range(len(s)):
+            if s[i] != index_J3[i]:
+                sum_J[i] = index_J3[i]
+            if s[i] != index_J4[i]:
+                sum_J[i] = index_J4[i]
+        if s == sum_J:
+            finish_step = 1
+        if s != sum_J:
+            for i in range(len(s)):
+                if s[i] != sum_J[i]:
+                    s[i] = sum_J[i]
+    return r, W1
